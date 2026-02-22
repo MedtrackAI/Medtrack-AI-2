@@ -750,10 +750,13 @@
     <button class="btn-primary" onclick="doLogin()">Sign In</button>
 
     <div class="demo-creds">
-      <b>Demo credentials:</b><br>
-      Admin: admin@medtrack.ai / password123<br>
-      Coder: coder@medtrack.ai / password123
-    </div>
+  <b>Demo credentials:</b><br>
+  Admin: admin@medtrack.ai / password123<br>
+  Coder: coder@medtrack.ai / password123<br>
+  Supervisor: supervisor@medtrack.ai / sup456<br>
+  Billing: billing@medtrack.ai / bill789<br>
+  Manager: manager@medtrack.ai / mngr000
+</div>
 
     <div class="login-footer">Protected by Anthropic Security &nbsp;·&nbsp; v2.4.1</div>
   </div>
@@ -1455,13 +1458,22 @@ function doLogin() {
   const email = document.getElementById('login-email').value;
   const pass = document.getElementById('login-pass').value;
   
-  // Simple validation
-  if ((email === 'azhagu@medtrack.ai' || email === 'azhagu@medtrack.ai') && pass === 'Bharathi09!@#') {
-    if (email === 'azhgu@medtrack.ai') {
-      currentUser = { name:'Dr. Admin User', role:'Administrator', initials:'AD' };
-    } else {
-      currentUser = { name:'Jamie Lin', role:'Medical Coder', initials:'JL' };
-    }
+  // Define valid users - you can add as many as you want
+  const validUsers = {
+    'admin@medtrack.ai': { name:'Dr. Admin User', role:'Administrator', initials:'AD', password:'password123' },
+    'coder@medtrack.ai': { name:'Jamie Lin', role:'Medical Coder', initials:'JL', password:'password123' },
+    'supervisor@medtrack.ai': { name:'Sarah Supervisor', role:'Coding Supervisor', initials:'SS', password:'sup456' },
+    'billing@medtrack.ai': { name:'Bob Billing', role:'Billing Specialist', initials:'BB', password:'bill789' },
+    'manager@medtrack.ai': { name:'Mike Manager', role:'Department Manager', initials:'MM', password:'mngr000' }
+  };
+  
+  // Check if email exists and password matches
+  if (validUsers[email] && validUsers[email].password === pass) {
+    currentUser = { 
+      name: validUsers[email].name, 
+      role: validUsers[email].role, 
+      initials: validUsers[email].initials 
+    };
     
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app').style.display = 'block';
@@ -1470,13 +1482,12 @@ function doLogin() {
     document.getElementById('sidebar-avatar').textContent = currentUser.initials;
     document.getElementById('topbar-avatar').textContent = currentUser.initials;
     
-    // Initialize all pages
     initApp();
+    showToast(`Welcome back, ${currentUser.name}!`, 'success');
   } else {
-    showToast('Invalid email or password. Use admin@medtrack.ai / password123', 'error');
+    showToast('Invalid email or password', 'error');
   }
 }
-
 // ─── INIT ────────────────────────────────────────────
 function initApp() {
   renderCharts(chartsData);

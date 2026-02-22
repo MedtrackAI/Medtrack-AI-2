@@ -909,7 +909,7 @@
           <div class="panel">
             <div class="panel-header">
               <div class="panel-title">Recent Activity</div>
-              <div class="panel-action" onclick="showPage('audit', document.querySelector('[onclick*=audit]'))">View all</div>
+              <div class="panel-action" onclick="showPage('audit', document.querySelectorAll('[onclick*=audit]')[0])">View all</div>
             </div>
             <div class="activity-item">
               <div class="activity-avatar" style="background:linear-gradient(135deg,#3b82f6,#60a5fa)">JL</div>
@@ -949,7 +949,7 @@
           <div class="panel">
             <div class="panel-header">
               <div class="panel-title">Top Coders Today</div>
-              <div class="panel-action" onclick="showPage('reports', document.querySelector('[onclick*=reports]'))">Full report</div>
+              <div class="panel-action" onclick="showPage('reports', document.querySelectorAll('[onclick*=reports]')[0])">Full report</div>
             </div>
             <div id="top-coders-list"></div>
           </div>
@@ -964,14 +964,14 @@
         <div class="table-toolbar">
           <div class="search-box">
             <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="color:var(--text3);flex-shrink:0;"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-            <input type="text" placeholder="Search charts..." oninput="filterCharts(this.value)">
+            <input type="text" placeholder="Search charts..." id="chart-search" onkeyup="filterCharts(this.value)">
           </div>
           <div style="display:flex;gap:10px;align-items:center;">
             <button class="filter-btn">
               <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
               Filter
             </button>
-            <select class="filter-btn" style="cursor:pointer;appearance:none;" onchange="filterByStatus(this.value)">
+            <select class="filter-select" style="cursor:pointer;appearance:none;" onchange="filterByStatus(this.value)">
               <option value="">All Status</option>
               <option value="completed">Completed</option>
               <option value="pending">Pending</option>
@@ -1317,7 +1317,7 @@
     </div>
     <div class="form-group">
       <label class="form-label">Project</label>
-      <select class="form-input">
+      <select class="form-input" id="chart-project">
         <option>Project Alpha — Cardiology</option>
         <option>Project Beta — Oncology</option>
         <option>Project Omega — General Surgery</option>
@@ -1326,7 +1326,7 @@
     </div>
     <div class="form-group">
       <label class="form-label">Assign Coder</label>
-      <select class="form-input">
+      <select class="form-input" id="chart-coder">
         <option>Jamie Lin</option>
         <option>Maya Kumar</option>
         <option>David Park</option>
@@ -1336,11 +1336,11 @@
     </div>
     <div class="form-group">
       <label class="form-label">DRG Code</label>
-      <input class="form-input" placeholder="e.g. 291.0" style="font-family:'DM Mono',monospace;">
+      <input class="form-input" id="chart-drg" placeholder="e.g. 291.0" style="font-family:'DM Mono',monospace;">
     </div>
     <div class="form-group">
       <label class="form-label">Priority</label>
-      <select class="form-input">
+      <select class="form-input" id="chart-priority">
         <option>Normal</option>
         <option>High</option>
         <option>Urgent</option>
@@ -1362,15 +1362,15 @@
     </div>
     <div class="form-group">
       <label class="form-label">Full Name</label>
-      <input class="form-input" placeholder="e.g. Dr. Jane Smith">
+      <input class="form-input" id="user-name" placeholder="e.g. Dr. Jane Smith">
     </div>
     <div class="form-group">
       <label class="form-label">Email Address</label>
-      <input class="form-input" type="email" placeholder="jane.smith@hospital.com">
+      <input class="form-input" id="user-email" type="email" placeholder="jane.smith@hospital.com">
     </div>
     <div class="form-group">
       <label class="form-label">Role</label>
-      <select class="form-input">
+      <select class="form-input" id="user-role">
         <option>Coder</option>
         <option>Admin</option>
         <option>Auditor</option>
@@ -1378,7 +1378,7 @@
     </div>
     <div class="form-group">
       <label class="form-label">Department</label>
-      <select class="form-input">
+      <select class="form-input" id="user-dept">
         <option>Cardiology</option>
         <option>Oncology</option>
         <option>General Surgery</option>
@@ -1447,26 +1447,33 @@ const TOP_CODERS = [
 let loggedIn = false;
 let currentUser = null;
 let chartsData = [...CHARTS];
+let usersData = [...USERS];
+let chartCounter = 2896;
 
 // ─── LOGIN ──────────────────────────────────────────
 function doLogin() {
   const email = document.getElementById('login-email').value;
   const pass = document.getElementById('login-pass').value;
-  const validUsers = {
-    'admin@medtrack.ai': { name:'Dr. Admin User', role:'Administrator', initials:'AD' },
-    'coder@medtrack.ai': { name:'Jamie Lin', role:'Medical Coder', initials:'JL' },
-  };
-  if(validUsers[email] && pass === 'password123') {
-    currentUser = validUsers[email];
+  
+  // Simple validation
+  if ((email === 'admin@medtrack.ai' || email === 'coder@medtrack.ai') && pass === 'password123') {
+    if (email === 'admin@medtrack.ai') {
+      currentUser = { name:'Dr. Admin User', role:'Administrator', initials:'AD' };
+    } else {
+      currentUser = { name:'Jamie Lin', role:'Medical Coder', initials:'JL' };
+    }
+    
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app').style.display = 'block';
     document.getElementById('sidebar-name').textContent = currentUser.name;
     document.getElementById('sidebar-role').textContent = currentUser.role;
     document.getElementById('sidebar-avatar').textContent = currentUser.initials;
     document.getElementById('topbar-avatar').textContent = currentUser.initials;
+    
+    // Initialize all pages
     initApp();
   } else {
-    showToast('Invalid email or password','error');
+    showToast('Invalid email or password. Use admin@medtrack.ai / password123', 'error');
   }
 }
 
@@ -1485,16 +1492,24 @@ function showPage(id, el) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   el.classList.add('active');
+  
   const titles = {
     dashboard:'Dashboard', charts:'Charts', projects:'Projects',
     reports:'Reports', audit:'Audit Log', users:'User Management', settings:'Settings'
   };
   document.getElementById('topbar-title').textContent = titles[id] || id;
+  
+  // Update subtitle with current date
+  const today = new Date();
+  const options = { weekday:'long', year:'numeric', month:'long', day:'numeric' };
+  document.getElementById('topbar-sub').textContent = today.toLocaleDateString('en-US', options);
 }
 
 // ─── CHARTS TABLE ────────────────────────────────────
 function renderCharts(data) {
   const tbody = document.getElementById('charts-tbody');
+  if (!tbody) return;
+  
   tbody.innerHTML = data.map(c => `
     <tr>
       <td><span class="chart-id">${c.id}</span></td>
@@ -1509,8 +1524,8 @@ function renderCharts(data) {
       <td style="color:var(--text3);font-family:'DM Mono',monospace;font-size:12px;">${c.date}</td>
       <td style="font-family:'DM Mono',monospace;font-size:12px;">${c.drg}</td>
       <td>
-        <button class="action-btn">View</button>
-        <button class="action-btn">Edit</button>
+        <button class="action-btn" onclick="viewChart('${c.id}')">View</button>
+        <button class="action-btn" onclick="editChart('${c.id}')">Edit</button>
         <button class="action-btn danger" onclick="deleteChart('${c.id}')">Delete</button>
       </td>
     </tr>
@@ -1531,20 +1546,57 @@ function filterByStatus(status) {
   renderCharts(chartsData.filter(c => c.status === status));
 }
 
+function viewChart(id) {
+  showToast(`Viewing chart ${id}`, 'success');
+}
+
+function editChart(id) {
+  showToast(`Editing chart ${id}`, 'success');
+}
+
 function deleteChart(id) {
-  chartsData = chartsData.filter(c => c.id !== id);
-  renderCharts(chartsData);
-  showToast(`Chart ${id} deleted`, 'success');
+  if (confirm(`Are you sure you want to delete chart ${id}?`)) {
+    chartsData = chartsData.filter(c => c.id !== id);
+    renderCharts(chartsData);
+    showToast(`Chart ${id} deleted`, 'success');
+  }
 }
 
 function openAddChart() {
   document.getElementById('add-chart-modal').classList.add('open');
 }
 
-let chartCounter = 2896;
 function addChart() {
+  const project = document.getElementById('chart-project')?.value || 'Project Alpha — Cardiology';
+  const coder = document.getElementById('chart-coder')?.value || 'Jamie Lin';
+  const drg = document.getElementById('chart-drg')?.value || '000.0';
+  const priority = document.getElementById('chart-priority')?.value || 'Normal';
+  
+  const coderMap = {
+    'Jamie Lin': { initials:'JL', color:'#3b82f6' },
+    'Maya Kumar': { initials:'MK', color:'#10b981' },
+    'David Park': { initials:'DP', color:'#8b5cf6' },
+    'Sara Rodriguez': { initials:'SR', color:'#f59e0b' },
+    'Alex Thompson': { initials:'AT', color:'#ef4444' }
+  };
+  
+  const coderInfo = coderMap[coder] || { initials:'NA', color:'#64748b' };
+  
   const id = 'CHT-'+chartCounter++;
-  chartsData.unshift({ id, project:'Project Alpha', coder:'Jamie Lin', coderInitials:'JL', coderColor:'#3b82f6', status:'pending', date:'2026-02-22', drg:'000.0' });
+  const today = new Date().toISOString().slice(0,10);
+  
+  const newChart = { 
+    id, 
+    project: project.split(' — ')[0], 
+    coder, 
+    coderInitials:coderInfo.initials, 
+    coderColor:coderInfo.color, 
+    status:'pending', 
+    date:today, 
+    drg 
+  };
+  
+  chartsData.unshift(newChart);
   renderCharts(chartsData);
   closeModal('add-chart-modal');
   showToast(`Chart ${id} added successfully`, 'success');
@@ -1552,7 +1604,10 @@ function addChart() {
 
 // ─── USERS ───────────────────────────────────────────
 function renderUsers() {
-  document.getElementById('users-grid').innerHTML = USERS.map(u => `
+  const grid = document.getElementById('users-grid');
+  if (!grid) return;
+  
+  grid.innerHTML = usersData.map(u => `
     <div class="user-tile">
       <div class="user-tile-avatar" style="background:${u.color}">${u.initials}</div>
       <div class="user-tile-name">${u.name}</div>
@@ -1566,13 +1621,23 @@ function renderUsers() {
           <div class="user-stat"><div class="user-stat-val" style="color:var(--accent)">
             ${Math.round(u.completed/u.charts*100)}%</div><div class="user-stat-lbl">Rate</div></div>
         </div>
-      ` : '<div style="font-size:12px;color:var(--text3);">System Administrator</div>'}
+      ` : '<div style="font-size:12px;color:var(--text3);margin:12px 0;">System Administrator</div>'}
       <div class="user-tile-actions">
-        <button class="action-btn">Edit</button>
-        <button class="action-btn danger">Disable</button>
+        <button class="action-btn" onclick="editUser('${u.email}')">Edit</button>
+        <button class="action-btn danger" onclick="disableUser('${u.email}')">Disable</button>
       </div>
     </div>
   `).join('');
+}
+
+function editUser(email) {
+  showToast(`Editing user ${email}`, 'success');
+}
+
+function disableUser(email) {
+  if (confirm(`Are you sure you want to disable user ${email}?`)) {
+    showToast(`User ${email} disabled`, 'success');
+  }
 }
 
 function openAddUser() {
@@ -1580,13 +1645,41 @@ function openAddUser() {
 }
 
 function addUser() {
+  const name = document.getElementById('user-name')?.value || 'New User';
+  const email = document.getElementById('user-email')?.value || 'user@medtrack.ai';
+  const role = document.getElementById('user-role')?.value || 'Coder';
+  const dept = document.getElementById('user-dept')?.value || 'General';
+  
+  if (!name || !email) {
+    showToast('Please fill in all fields', 'error');
+    return;
+  }
+  
+  // Generate initials
+  const initials = name.split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase();
+  
+  // Generate color
+  const colors = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444', '#06b6d4'];
+  const randomColor = colors[Math.floor(Math.random() * colors.length)];
+  
+  const newUser = {
+    name, email, role: role.toLowerCase(), dept, initials: initials,
+    color: `linear-gradient(135deg, ${randomColor}, ${randomColor}dd)`,
+    charts: 0, completed: 0
+  };
+  
+  usersData.push(newUser);
+  renderUsers();
   closeModal('add-user-modal');
-  showToast('User invitation sent successfully','success');
+  showToast(`User ${name} added successfully`, 'success');
 }
 
 // ─── AUDIT ───────────────────────────────────────────
 function renderAudit() {
-  document.getElementById('audit-timeline').innerHTML = AUDIT_EVENTS.map(e => `
+  const timeline = document.getElementById('audit-timeline');
+  if (!timeline) return;
+  
+  timeline.innerHTML = AUDIT_EVENTS.map(e => `
     <div class="audit-item">
       <div class="audit-dot" style="background:${e.color}22;color:${e.color};font-size:16px;">${e.dot}</div>
       <div class="audit-content">
@@ -1603,7 +1696,10 @@ function renderAudit() {
 
 // ─── PROJECTS ────────────────────────────────────────
 function renderProjects() {
-  document.getElementById('projects-grid').innerHTML = PROJECTS.map(p => `
+  const grid = document.getElementById('projects-grid');
+  if (!grid) return;
+  
+  grid.innerHTML = PROJECTS.map(p => `
     <div class="stat-card" style="border-radius:16px;padding:24px;cursor:pointer;">
       <div style="font-size:28px;margin-bottom:12px;">${p.emoji}</div>
       <div style="font-size:16px;font-weight:700;margin-bottom:4px;">${p.name}</div>
@@ -1616,8 +1712,8 @@ function renderProjects() {
         <div class="progress-fill" style="width:${p.done}%;background:${p.color};"></div>
       </div>
       <div style="display:flex;gap:8px;margin-top:16px;">
-        <button class="action-btn" style="flex:1;">View Charts</button>
-        <button class="action-btn">⚙</button>
+        <button class="action-btn" style="flex:1;" onclick="showToast('Viewing ${p.name} charts', 'success')">View Charts</button>
+        <button class="action-btn" onclick="showToast('Project settings', 'success')">⚙</button>
       </div>
     </div>
   `).join('');
@@ -1625,7 +1721,10 @@ function renderProjects() {
 
 // ─── TOP CODERS ──────────────────────────────────────
 function renderTopCoders() {
-  document.getElementById('top-coders-list').innerHTML = TOP_CODERS.map((c,i) => `
+  const list = document.getElementById('top-coders-list');
+  if (!list) return;
+  
+  list.innerHTML = TOP_CODERS.map((c,i) => `
     <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
       <div style="font-size:12px;font-weight:700;color:var(--text3);width:16px;text-align:center;">${i+1}</div>
       <div class="coder-avatar" style="background:${c.color};width:32px;height:32px;font-size:11px;">${c.initials}</div>
@@ -1644,6 +1743,8 @@ function renderTopCoders() {
 function closeModal(id) {
   document.getElementById(id).classList.remove('open');
 }
+
+// Close modals when clicking on overlay
 document.querySelectorAll('.modal-overlay').forEach(m => {
   m.addEventListener('click', e => { if(e.target === m) m.classList.remove('open'); });
 });
@@ -1659,7 +1760,26 @@ function showToast(msg, type='success') {
 }
 
 // ─── ENTER KEY LOGIN ─────────────────────────────────
-document.getElementById('login-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+document.addEventListener('DOMContentLoaded', function() {
+  const loginPass = document.getElementById('login-pass');
+  if (loginPass) {
+    loginPass.addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+  }
+  
+  // Also add enter key for email field
+  const loginEmail = document.getElementById('login-email');
+  if (loginEmail) {
+    loginEmail.addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+  }
+});
+
+// ─── INITIAL RENDER ON PAGE LOAD ─────────────────────
+// This ensures that even if someone navigates directly to app, they see login
+window.onload = function() {
+  // Make sure login screen is visible initially
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+};
 </script>
 </body>
 </html>
